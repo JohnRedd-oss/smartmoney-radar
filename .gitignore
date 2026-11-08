@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 数据（可重新采集，不入库）
+*.db
+*.sqlite
+*.sqlite3
+smartmoney.db/
+
+# 报告输出（保留存档，但运行生成的临时报告忽略）
+reports/*.tmp
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*~
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 浏览器调试目录（截图时产生的 Chrome profile）
+cdp*/
+shots/cdp*/
+
+# 凭据
+.env
+*.token

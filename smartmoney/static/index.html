@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>聪明钱雷达</title>
+<style>
+:root{
+  --bg:#0a0e13; --bg2:#0f151d; --card:#121a24; --card2:#16202c;
+  --line:#1f2c3a; --line2:#2a3a4d;
+  --txt:#e6edf5; --dim:#8fa3b8; --dim2:#5f7386;
+  --gold:#d9b25f; --gold2:#f0cd85;
+  --up:#ff6b6b; --down:#4ecdc4; --teal:#4ecdc4; --blue:#5b9dd9;
+  --warn:#e8a33d; --bad:#e05c5c; --good:#4ecdc4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:14px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-family:"SF Mono",Consolas,"Roboto Mono",monospace;font-variant-numeric:tabular-nums}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px 80px}
+
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,14,19,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.hd{max-width:1280px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px}
+.logo{display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 10px var(--gold);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+h1{font-size:16px;font-weight:600;letter-spacing:.5px}
+.hd .sub{color:var(--dim2);font-size:12px}
+.spacer{flex:1}
+button{
+  background:var(--card2);color:var(--txt);border:1px solid var(--line2);
+  padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;
+  transition:.15s;font-family:inherit
+}
+button:hover{background:#1d2a38;border-color:#3a4d63}
+button:disabled{opacity:.5;cursor:wait}
+button.primary{background:linear-gradient(180deg,#c9a34f,#a8853c);color:#1a1408;
+  border-color:#c9a34f;font-weight:600}
+button.primary:hover{background:linear-gradient(180deg,#dcb45c,#b8943f)}
+
+/* ---------- section ---------- */
+section{margin-top:36px}
+.sec-hd{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;
+  padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sec-hd h2{font-size:15px;font-weight:600;letter-spacing:.5px}
+.sec-hd .tag{font-size:11px;color:var(--dim2);letter-spacing:1px;
+  text-transform:uppercase;border:1px solid var(--line2);padding:1px 7px;border-radius:3px}
+.sec-hd .note{font-size:12px;color:var(--dim2);margin-left:auto}
+
+/* ---------- narrative ---------- */
+.narr{background:linear-gradient(135deg,#131c27,#0f1620);
+  border:1px solid var(--line2);border-left:3px solid var(--gold);
+  border-radius:8px;padding:20px 24px;margin-bottom:16px}
+.narr li{list-style:none;padding:7px 0 7px 18px;position:relative;
+  font-size:14.5px;line-height:1.7;color:#d8e3ee}
+.narr li::before{content:"";position:absolute;left:0;top:16px;
+  width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:.7}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:14px}
+.g3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;transition:.18s}
+.card:hover{border-color:var(--line2);background:var(--card2)}
+
+.kpi{display:flex;flex-direction:column;gap:6px}
+.kpi .k{font-size:12px;color:var(--dim);letter-spacing:.3px}
+.kpi .v{font-size:26px;font-weight:600;line-height:1.2}
+.kpi .v.gold{color:var(--gold2)}
+.kpi .u{font-size:12px;color:var(--dim2);font-weight:400;margin-left:4px}
+.kpi .d{font-size:12px;color:var(--dim2)}
+
+.headline{background:var(--card);border:1px solid var(--line);
+  border-radius:8px;padding:14px 16px;border-left:2px solid var(--teal)}
+.headline .r{font-size:10px;color:var(--dim2);letter-spacing:1.2px;
+  text-transform:uppercase;margin-bottom:6px}
+.headline .t{font-size:13.5px;line-height:1.7;color:#cfdae6}
+.headline .ts{font-size:11px;color:var(--dim2);margin-top:8px}
+
+/* ---------- table ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;font-weight:500;color:var(--dim);
+  font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;
+  border-bottom:1px solid var(--line2);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+td.r,th.r{text-align:right}
+.mono{font-family:"SF Mono",Consolas,monospace;font-variant-numeric:tabular-nums;font-size:12.5px}
+
+.pill{display:inline-block;padding:1px 7px;border-radius:3px;
+  font-size:11px;font-weight:500;letter-spacing:.3px}
+.pill.new{background:rgba(78,205,196,.15);color:var(--teal)}
+.pill.add{background:rgba(91,157,217,.15);color:var(--blue)}
+.pill.cut{background:rgba(224,92,92,.15);color:var(--bad)}
+.pill.sell{background:rgba(224,92,92,.15);color:var(--bad)}
+.pill.buy{background:rgba(78,205,196,.15);color:var(--teal)}
+.pill.neg{background:rgba(143,163,184,.12);color:var(--dim2)}
+.pill.watch{background:rgba(232,163,61,.15);color:var(--warn)}
+
+.pos{color:var(--up)} .negv{color:var(--down)}
+
+/* ---------- chart ---------- */
+.chart-box{background:var(--card);border:1px solid var(--line);
+  border-radius:8px;padding:20px}
+.chart-box h3{font-size:13px;font-weight:500;color:var(--dim);
+  margin-bottom:14px;letter-spacing:.4px}
+svg{display:block;width:100%;overflow:visible}
+.grid-line{stroke:var(--line);stroke-width:1}
+.axis-txt{fill:var(--dim2);font-size:10px;font-family:monospace}
+.bar{transition:.2s}
+.bar:hover{opacity:.75}
+
+/* ---------- health ---------- */
+.hrow{display:flex;align-items:center;gap:10px;padding:7px 0;
+  border-bottom:1px solid var(--line);font-size:13px}
+.hrow:last-child{border:none}
+.hdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.hdot.ok{background:var(--good);box-shadow:0 0 6px rgba(78,205,196,.6)}
+.hdot.bad{background:var(--bad);box-shadow:0 0 6px rgba(224,92,92,.6)}
+.hdot.none{background:var(--dim2)}
+.hrow .n{min-width:104px;color:var(--txt);font-size:13px}
+.hrow .src{min-width:150px;color:var(--dim2);font-size:11.5px}
+.hrow .d{color:var(--dim2);font-size:12px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- misc ---------- */
+.loading{color:var(--dim2);padding:60px 0;text-align:center;font-size:13px}
+.err{background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.3);
+  border-radius:6px;padding:10px 14px;color:#e8a0a0;font-size:12.5px;margin-bottom:12px}
+.empty{color:var(--dim2);padding:24px 0;text-align:center;font-size:13px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+
+/* 长表格限高滚动，避免把后续板块顶出视口 */
+.scroll{max-height:520px;overflow-y:auto}
+.scroll::-webkit-scrollbar{width:8px}
+.scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+.scroll::-webkit-scrollbar-track{background:transparent}
+.scroll thead th{position:sticky;top:0;background:var(--card);z-index:1}
+.tbl-hd{padding:14px 16px;border-bottom:1px solid var(--line);font-size:13px;
+  display:flex;justify-content:space-between;align-items:center}
+.tbl-hd span{color:var(--dim2);font-size:11.5px;font-family:monospace}
+
+/* 公告表：固定列宽，标题列吃掉剩余空间并截断，杜绝横向溢出 */
+table.fixed{table-layout:fixed}
+table.fixed th:nth-child(1),table.fixed td:nth-child(1){width:88px}
+table.fixed th:nth-child(2),table.fixed td:nth-child(2){width:110px}
+table.fixed th:nth-child(4),table.fixed td:nth-child(4){width:72px}
+table.fixed th:nth-child(5),table.fixed td:nth-child(5){width:92px}
+.nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+td.ttl{overflow:hidden}
+td.ttl a{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---- 聪明钱买入卡片 ---- */
+.sb-card{padding:14px 16px}
+.sb-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sb-camp{font-size:13px;font-weight:600;letter-spacing:.3px}
+.sb-cnt{font-size:11.5px;color:var(--dim2);font-family:monospace}
+.sb-total{font-size:24px;font-weight:600;line-height:1.2}
+.sb-total .u{font-size:11px;color:var(--dim2);margin-left:4px;font-weight:400}
+.sb-sub{font-size:11.5px;color:var(--dim2);margin-bottom:10px}
+.sb-row{display:flex;align-items:center;gap:8px;padding:4px 0;
+  border-top:1px solid var(--line);font-size:12.5px}
+.sb-stock{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-state{font-size:10.5px;color:var(--dim2);background:rgba(91,157,217,.15);
+  padding:0 5px;border-radius:3px}
+.sb-state.new{color:var(--teal);background:rgba(78,205,196,.15)}
+.sb-amt{color:var(--dim);font-size:12px}
+
+/* ---- 资产行情 ---- */
+.asset-row{display:flex;align-items:center;gap:8px;padding:5px 0;
+  border-bottom:1px solid var(--line);font-size:12.5px}
+.asset-row:last-child{border:none}
+.an{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{color:var(--txt);font-size:12.5px}
+.au{color:var(--dim2);font-size:10.5px;margin-left:3px}
+.ac{min-width:62px;text-align:right;font-size:12px}
+
+/* 固定列宽表 */
+table.fixed2{table-layout:fixed}
+table.fixed2 th:nth-child(1),table.fixed2 td:nth-child(1){width:92px}
+table.fixed2 th:nth-child(2),table.fixed2 td:nth-child(2){width:88px}
+table.fixed2 th:nth-child(3),table.fixed2 td:nth-child(3){width:150px}
+table.fixed2 th:nth-child(5),table.fixed2 td:nth-child(5){width:66px}
+table.fixed2 th:nth-child(6),table.fixed2 td:nth-child(6){width:104px}
+
+table.fixed3{table-layout:fixed}
+table.fixed3 th:nth-child(1),table.fixed3 td:nth-child(1){width:120px}
+
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);
+  color:var(--dim2);font-size:11.5px;line-height:1.9}
+footer code{background:var(--card2);padding:1px 5px;border-radius:3px;
+  font-family:monospace;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <div class="logo">
+      <div class="dot"></div>
+      <h1>聪明钱雷达</h1>
+      <span class="sub" id="asOf">加载中…</span>
+    </div>
+    <div class="spacer"></div>
+    <button id="btnRefresh">重新采集</button>
+    <button id="btnReload" class="primary">刷新视图</button>
+  </div>
+</header>
+
+<div class="wrap" id="app">
+  <div class="loading">正在读取数据…</div>
+</div>
+
+<footer class="wrap">
+  <div>每句话都必须带 <code>[源|置信|滞后]</code> 尾巴。无来源的结论不入库 —— 这是本工具的第一道闸。</div>
+  <div>数字全部来自官方/半官方原始文件：外汇局 xlsx、SEC EDGAR informationtable.xml、巨潮公告、东方财富逐笔成交。<b>未执行</b>的源在「数据源健康」里标红。</div>
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmt = (v, d=0) => v==null ? "—" : v.toLocaleString("zh-CN",{minimumFractionDigits:d,maximumFractionDigits:d});
+const yi = v => v==null ? "—" : (Math.abs(v)<1 ? (v*10000).toLocaleString("zh-CN",{maximumFractionDigits:0})+" 万" : v.toFixed(2)+" 亿");
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function j(u, opt){
+  const r = await fetch(u, opt);
+  if(!r.ok) throw new Error(u+" → HTTP "+r.status);
+  return r.json();
+}
+
+// ---------------------------------------------------------------- 迷你折线/柱状图
+function lineChart(el, data, {key, label, color="#d9b25f", fill=true, h=180, unit=""}){
+  const w = el.clientWidth || 800;
+  const pad = {l:52, r:16, t:14, b:26};
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const vals = data.map(d=>d[key]).filter(v=>v!=null);
+  if(!vals.length){ el.innerHTML='<div class="empty">无数据</div>'; return; }
+  let min = Math.min(...vals), max = Math.max(...vals);
+  const span = (max-min)||1; min -= span*0.12; max += span*0.12;
+  const x = i => pad.l + (data.length<=1?iw/2:i*iw/(data.length-1));
+  const y = v => pad.t + ih - ((v-min)/(max-min))*ih;
+
+  const pts = data.map((d,i)=> d[key]==null?null:[x(i),y(d[key])]).filter(Boolean);
+  const path = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const area = path + ` L${pts[pts.length-1][0]},${pad.t+ih} L${pts[0][0]},${pad.t+ih} Z`;
+
+  // y 轴刻度
+  let g='';
+  for(let i=0;i<=4;i++){
+    const v = min + (max-min)*i/4, yy = y(v);
+    g += `<line class="grid-line" x1="${pad.l}" y1="${yy.toFixed(1)}" x2="${pad.l+iw}" y2="${yy.toFixed(1)}"/>`;
+    g += `<text class="axis-txt" x="${pad.l-8}" y="${(yy+3).toFixed(1)}" text-anchor="end">${fmt(v,0)}</text>`;
+  }
+  // x 轴标签（最多 8 个）
+  const step = Math.max(1, Math.ceil(data.length/8));
+  data.forEach((d,i)=>{
+    if(i%step && i!==data.length-1) return;
+    g += `<text class="axis-txt" x="${x(i).toFixed(1)}" y="${h-8}" text-anchor="middle">${esc(d.month||"")}</text>`;
+  });
+
+  const gid = "g"+Math.random().toString(36).slice(2,8);
+  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${g}
+    ${fill?`<path d="${area}" fill="url(#${gid})"/>`:''}
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="${color}"/>`).join('')}
+  </svg>`;
+}
+
+function barChart(el, data, {key, labelFn, colorFn, h=180}){
+  const w = el.clientWidth || 800;
+  const pad = {l:52, r:16, t:14, b:26};
+  const iw = w-pad.l-pad.r, ih = h-pad.t-pad.b;
+  const vals = data.map(d=>Math.abs(d[key]||0));
+  const max = Math.max(...vals) || 1;
+  const bw = iw/data.length*0.62;
+  const gw = iw/data.length;
+  let g='';
+  for(let i=0;i<=4;i++){
+    const v = max*i/4, yy = pad.t+ih-(v/max)*ih;
+    g += `<line class="grid-line" x1="${pad.l}" y1="${yy.toFixed(1)}" x2="${pad.l+iw}" y2="${yy.toFixed(1)}"/>`;
+    g += `<text class="axis-txt" x="${pad.l-8}" y="${(yy+3).toFixed(1)}" text-anchor="end">${fmt(v,0)}</text>`;
+  }
+  const bars = data.map((d,i)=>{
+    const v = Math.abs(d[key]||0);
+    const bh = (v/max)*ih;
+    const xx = pad.l + i*gw + (gw-bw)/2;
+    const yy = pad.t+ih-bh;
+    const c = colorFn ? colorFn(d) : "#d9b25f";
+    return `<rect class="bar" x="${xx.toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}"
+      height="${Math.max(bh,1).toFixed(1)}" rx="2" fill="${c}">
+      <title>${esc(labelFn?labelFn(d):'')} ${fmt(v,0)}</title></rect>
+      <text class="axis-txt" x="${(xx+bw/2).toFixed(1)}" y="${h-8}" text-anchor="middle">${esc(d.month||"")}</text>`;
+  }).join('');
+  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}">${g}${bars}</svg>`;
+}
+
+// ---------------------------------------------------------------- 渲染
+function renderSummary(s){
+  const kpis = [];
+  const g = s.headlines.find(h=>h.rule==="pboc_gold");
+  if(g && g.payload){
+    kpis.push({k:"央行年内增持黄金", v:fmt(g.payload.ytd_wan_oz,0), u:"万盎司",
+      d:`连续 ${g.payload.streak} 个月 · 当月约 ${fmt(g.payload.cost_usd_yi,0)} 亿美元`});
+  }
+  const f = s.headlines.find(h=>h.rule==="13f_diff");
+  if(f && f.payload){
+    kpis.push({k:"国家资本海外持仓", v:fmt(f.payload.total_now_usd_yi,0), u:"亿美元",
+      d:`上期 ${fmt(f.payload.total_prev_usd_yi,0)} 亿美元`});
+  }
+  const b = s.headlines.find(h=>h.rule==="block_trade");
+  if(b && b.payload){
+    kpis.push({k:"最近交易日大宗成交", v:yi(b.payload.total_cny_yi), u:"元",
+      d:`机构席位 ${yi(b.payload.inst_cny_yi)} 元`});
+  }
+  kpis.push({k:"入库事实 / 信号", v:`${fmt(s.stats.facts)} / ${fmt(s.stats.signals)}`, u:"",
+    d:`${s.stats.entities} 个主体 · 运行 ${s.stats.runs} 次`});
+
+  const hd = s.headlines.map(h=>`
+    <div class="headline">
+      <div class="r">${esc(h.rule)}</div>
+      <div class="t">${esc(h.sentence)}</div>
+      <div class="ts num">${esc(h.ts)}</div>
+    </div>`).join('') || '<div class="empty">无信号</div>';
+
+  const errHtml = (s.errors||[]).length
+    ? `<div class="err">规则异常：${s.errors.map(e=>esc(e.rule+" "+e.error)).join("<br>")}</div>` : "";
+
+  return `
+  ${errHtml}
+  <section>
+    <div class="sec-hd"><h2>总述</h2><span class="tag">Summary</span>
+      <span class="note">${esc(s.as_of)}</span></div>
+    <div class="narr">${s.narrative.length
+      ? s.narrative.map(n=>`<li>${esc(n)}</li>`).join('')
+      : '<li style="color:var(--dim2)">暂无足够数据生成总述。</li>'}</div>
+    <div class="grid g4">
+      ${kpis.map(k=>`<div class="card kpi">
+        <div class="k">${esc(k.k)}</div>
+        <div class="v gold num">${k.v}<span class="u">${esc(k.u)}</span></div>
+        <div class="d">${esc(k.d)}</div></div>`).join('')}
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-hd"><h2>今日一句话</h2><span class="tag">Signals</span>
+      <span class="note">${s.headlines.length} 条</span></div>
+    <div class="grid g3">${hd}</div>
+  </section>`;
+}
+
+function renderGold(g){
+  if(!g.series.length) return '<section><div class="empty">无黄金数据</div></section>';
+  const cur = g.current;
+  const rows = [...g.series].reverse().map(s=>`
+    <tr>
+      <td class="num">${esc(s.month)}</td>
+      <td class="r mono">${fmt(s.oz,0)}</td>
+      <td class="r mono ${s.delta>0?'pos':'negv'}">${s.delta==null?'—':(s.delta>0?'+':'')+fmt(s.delta,0)}</td>
+      <td class="r mono">${s.price_usd?fmt(s.price_usd,0):'—'}</td>
+      <td class="r mono">${s.cost_usd?fmt(s.cost_usd,0):'—'}</td>
+      <td class="r mono">${s.usd?fmt(s.usd,2):'—'}</td>
+    </tr>`).join('');
+  return `
+  <section>
+    <div class="sec-hd"><h2>央行黄金储备</h2><span class="tag">PBOC Gold</span>
+      <span class="note">源：外汇局官方储备资产 xlsx · 滞后 0 天</span></div>
+
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="card kpi"><div class="k">当前储备</div>
+        <div class="v gold num">${fmt(cur.oz,0)}<span class="u">万盎司</span></div>
+        <div class="d">${fmt(cur.oz*g.ton_per_wan_oz,1)} 吨</div></div>
+      <div class="card kpi"><div class="k">年内累计</div>
+        <div class="v num pos">+${fmt(g.ytd_wan_oz,0)}<span class="u">万盎司</span></div>
+        <div class="d">+${fmt(g.ytd_wan_oz*g.ton_per_wan_oz,1)} 吨</div></div>
+      <div class="card kpi"><div class="k">本月购金成本（估算）</div>
+        <div class="v num">${fmt(cur.cost_usd,0)}<span class="u">亿美元</span></div>
+        <div class="d">增量 × 当月金价 · 误差 ±3%</div></div>
+      <div class="card kpi"><div class="k">折算美元</div>
+        <div class="v num">${fmt(cur.usd,0)}<span class="u">亿美元</span></div>
+        <div class="d">${esc(cur.month)}</div></div>
+    </div>
+
+    <div class="split">
+      <div class="chart-box"><h3>储备量（万盎司）</h3><div id="chGold"></div></div>
+      <div class="chart-box"><h3>月度增量（万盎司）</h3><div id="chDelta"></div></div>
+    </div>
+
+    <div class="card" style="margin-top:14px;padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>月份</th><th class="r">储备（万盎司）</th><th class="r">环比</th>
+        <th class="r">金价（美元/盎司）</th><th class="r">购金（亿美元）</th>
+        <th class="r">折美元（亿）</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+function renderHoldings(h){
+  if(!h.funds.length) return '<section><div class="empty">无 13F 数据</div></section>';
+  return h.funds.map(f=>{
+    const bars = f.positions.map(p=>{
+      const w = Math.min(100, (p.value_usd||0)/1e8/280*100);
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px">
+          <span>${esc(p.issuer)} <span class="pill ${p.change}">${{new:"新建",add:"加仓",cut:"减仓"}[p.change]||p.change}</span></span>
+          <span class="mono">${fmt((p.value_usd||0)/1e8,1)} 亿美元</span>
+        </div>
+        <div style="height:5px;background:var(--line);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${w}%;background:${
+            p.change==="new"?"var(--teal)":p.change==="cut"?"var(--bad)":"var(--blue)"
+          };border-radius:3px"></div>
+        </div>
+      </div>`;
+    }).join('');
+    const closed = f.closed.length
+      ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+          <div style="font-size:11.5px;color:var(--dim2);margin-bottom:6px">已清仓</div>
+          ${f.closed.map(c=>`<span class="pill cut" style="margin-right:6px">${esc(c.issuer)}</span>`).join('')}
+        </div>` : '';
+    return `
+    <section>
+      <div class="sec-hd"><h2>${esc(f.entity)}</h2><span class="tag">SEC 13F</span>
+        <span class="note">${esc(f.prev_period||"?")} → ${esc(f.period)} · 滞后 45 天</span></div>
+      <div class="grid g4" style="margin-bottom:14px">
+        <div class="card kpi"><div class="k">持仓市值</div>
+          <div class="v num">${fmt(f.total_usd_yi,1)}<span class="u">亿美元</span></div>
+          <div class="d">上期 ${fmt(f.prev_total_usd_yi,1)} 亿美元</div></div>
+        <div class="card kpi"><div class="k">持仓数</div>
+          <div class="v num">${f.positions.length}<span class="u">只</span></div>
+          <div class="d">新建 ${f.positions.filter(p=>p.change==="new").length} · 清仓 ${f.closed.length}</div></div>
+      </div>
+      <div class="card">${bars}${closed}</div>
+    </section>`;
+  }).join('');
+}
+
+function renderTrades(t){
+  const b = t.block, i = t.insider;
+  const brow = (b.rows||[]).map(r=>`
+    <tr><td>${esc(r.stock)}<br><span class="mono" style="color:var(--dim2);font-size:11px">${esc(r.code)}</span></td>
+      <td class="num">${esc(r.buyer)}</td>
+      <td class="r mono">${fmt(r.amount_cny/1e8,2)} 亿</td>
+      <td class="r mono">${r.price==null?'—':fmt(r.price,2)}</td>
+      <td class="r mono ${r.premium>0?'pos':'negv'}">${r.premium==null?'—':fmt(r.premium,1)+'%'}</td>
+    </tr>`).join('');
+  const irow = (i.rows||[]).map(r=>`
+    <tr><td>${esc(r.person)}<br><span style="color:var(--dim2);font-size:11px">${esc(r.position||"")}</span></td>
+      <td>${esc(r.stock)}</td>
+      <td><span class="pill ${r.action}">${r.action==="sell"?"减持":"增持"}</span></td>
+      <td class="r mono">${fmt(Math.abs(r.amount_cny||0)/1e4,0)} 万</td>
+      <td class="r mono">${r.price==null?'—':fmt(r.price,2)}</td>
+    </tr>`).join('');
+
+  return `
+  <section>
+    <div class="sec-hd"><h2>大宗交易与高管增减持</h2><span class="tag">Trades</span>
+      <span class="note">源：东方财富逐笔 · 滞后 1 天</span></div>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="card kpi"><div class="k">大宗成交（${esc(b.date||"")}）</div>
+        <div class="v num">${yi((b.summary.total_cny||0)/1e8)}</div>
+        <div class="d">${b.summary.count} 笔</div></div>
+      <div class="card kpi"><div class="k">机构专用席位</div>
+        <div class="v num" style="color:var(--teal)">${yi((b.summary.inst_cny||0)/1e8)}</div>
+        <div class="d">${b.summary.inst_count} 笔 · 占比 ${b.summary.total_cny?((b.summary.inst_cny/b.summary.total_cny*100).toFixed(0)):0}%</div></div>
+      <div class="card kpi"><div class="k">高管减持（${esc(i.date||"")}）</div>
+        <div class="v num" style="color:var(--up)">${i.sell}<span class="u">笔</span></div>
+        <div class="d">增持 ${i.buy} 笔</div></div>
+    </div>
+    <div class="split">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="tbl-hd">大宗交易（按成交额）<span>${b.summary.count} 笔</span></div>
+        <div class="scroll"><table><thead><tr><th>标的</th><th>买方席位</th><th class="r">金额</th>
+        <th class="r">价格</th><th class="r">溢价</th></tr></thead><tbody>${brow||'<tr><td colspan=5 class="empty">无数据</td></tr>'}</tbody></table></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="tbl-hd">高管增减持（按金额）<span>${i.rows.length} 笔</span></div>
+        <div class="scroll"><table><thead><tr><th>人名</th><th>标的</th><th>方向</th>
+        <th class="r">金额</th><th class="r">均价</th></tr></thead><tbody>${irow||'<tr><td colspan=5 class="empty">无数据</td></tr>'}</tbody></table></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function renderAnn(a){
+  const rows = (a.rows||[]).slice(0,60).map(r=>`
+    <tr>
+      <td class="num nowrap">${esc(r.ts)}</td>
+      <td class="nowrap">${esc(r.entity)}</td>
+      <td class="ttl"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a></td>
+      <td class="nowrap"><span class="pill">${esc(r.keyword||"")}</span></td>
+      <td class="nowrap">${r.negated?'<span class="pill neg">否定式</span>':r.watch?'<span class="pill watch">关键主体</span>':''}</td>
+    </tr>`).join('');
+  return `
+  <section>
+    <div class="sec-hd"><h2>公告扫描</h2><span class="tag">Announcements</span>
+      <span class="note">源：巨潮资讯 · 滞后 0 天 · 已剔除「未减持/终止减持」</span></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tbl-hd">全部公告<span>${(a.rows||[]).length} 条</span></div>
+      <div class="scroll"><table class="fixed"><thead><tr><th>日期</th><th>公司</th><th>标题</th><th>关键词</th><th>标记</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan=5 class="empty">无数据</td></tr>'}</tbody></table></div>
+    </div>
+  </section>`;
+}
+
+function renderHealth(s){
+  const rows = s.health.map(h=>`
+    <div class="hrow">
+      <div class="hdot ${h.ok===true?'ok':h.ok===false?'bad':'none'}"></div>
+      <div class="n">${esc(h.label||h.source)}</div>
+      <div class="src">${esc(h.src||"")}</div>
+      <div class="d">${esc(h.detail)}</div>
+    </div>`).join('');
+  return `
+  <section>
+    <div class="sec-hd"><h2>数据源健康</h2><span class="tag">Health</span>
+      <span class="note">${s.last_run?('上次运行 '+esc(s.last_run.started)):'未运行'}</span></div>
+    <div class="card">${rows}</div>
+  </section>`;
+}
+
+// ---------------------------------------------------------------- 聪明钱下场买了什么
+const CAMP_COLOR = {
+  "北向资金":"#4ecdc4", "汇金证金":"#d9b25f", "社保养老金":"#8b7fd4",
+  "国资平台":"#e8a33d", "险资":"#5b9dd9", "外资":"#e07a9b",
+  "公募":"#6fb98f", "其他机构":"#5f7386"
+};
+
+function renderSmartBuy(sb){
+  if(!sb || !sb.camps || !sb.camps.length)
+    return '<section><div class="sec-hd"><h2>聪明钱下场买了什么</h2></div><div class="empty">无数据，点「重新采集」</div></section>';
+
+  const sm = sb.summary || {};
+  const cards = sb.camps.map(c=>{
+    const col = CAMP_COLOR[c.camp] || "#5f7386";
+    const tops = (c.top||[]).slice(0,3).map(t=>
+      `<div class="sb-row"><span class="sb-stock">${esc(t.stock)}</span>
+        <span class="sb-state ${t.state==='新进'?'new':''}">${esc(t.state)}</span>
+        <span class="sb-amt mono">${(t.usd||0).toFixed(1)}亿$</span></div>`).join('');
+    return `<div class="card sb-card" style="border-left:3px solid ${col}">
+      <div class="sb-hd"><span class="sb-camp" style="color:${col}">${esc(c.camp)}</span>
+        <span class="sb-cnt">${c.count} 笔</span></div>
+      <div class="sb-total mono">${(c.usd||0).toFixed(1)}<span class="u">亿美元</span></div>
+      <div class="sb-sub mono">${((c.cny||0)/1e8).toFixed(0)} 亿元人民币市值</div>
+      ${tops}
+    </div>`;
+  }).join('');
+
+  const rows = (sb.rows||[]).slice(0,50).map(r=>`
+    <tr>
+      <td class="num nowrap">${esc(r.ts)}</td>
+      <td><span class="pill" style="background:${(CAMP_COLOR[r.camp]||'#5f7386')}22;color:${CAMP_COLOR[r.camp]||'#5f7386'}">${esc(r.camp)}</span></td>
+      <td class="nowrap">${esc(r.stock)}<br><span class="mono" style="color:var(--dim2);font-size:11px">${esc(r.code)}</span></td>
+      <td>${esc((r.holder||"").slice(0,30))}</td>
+      <td><span class="pill ${r.state==='新进'?'new':'add'}">${esc(r.state)}</span></td>
+      <td class="r mono">${(r.usd||0).toFixed(2)} 亿$</td>
+    </tr>`).join('');
+
+  return `
+  <section>
+    <div class="sec-hd"><h2>聪明钱下场买了什么</h2><span class="tag">Smart Money Buys</span>
+      <span class="note">${esc(sb.window_from||"")} ~ ${esc(sb.as_of||"")} · 十大流通股东新进/加仓</span></div>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="card kpi"><div class="k">买入笔数</div>
+        <div class="v num">${fmt(sm.count||0)}<span class="u">笔</span></div>
+        <div class="d">近 ${sb.days} 天披露的报告期</div></div>
+      <div class="card kpi"><div class="k">合计市值</div>
+        <div class="v num gold">${fmt((sm.cny_yi||0),0)}<span class="u">亿元</span></div>
+        <div class="d">${((sm.usd_yi||0)).toFixed(0)} 亿美元</div></div>
+      <div class="card kpi"><div class="k">最大阵营</div>
+        <div class="v num" style="color:${CAMP_COLOR[sb.camps[0].camp]||'#fff'}">${esc(sb.camps[0].camp)}</div>
+        <div class="d">${sb.camps[0].count} 笔 · ${(sb.camps[0].usd||0).toFixed(1)} 亿美元</div></div>
+      <div class="card kpi"><div class="k">阵营数</div>
+        <div class="v num">${sb.camps.length}</div>
+        <div class="d">北向/汇金/社保/国资/险资/外资/公募</div></div>
+    </div>
+    <div class="grid g3" style="margin-bottom:14px">${cards}</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tbl-hd">买入明细（按金额）<span>${(sb.rows||[]).length} 条</span></div>
+      <div class="scroll"><table class="fixed2"><thead><tr><th>报告期</th><th>阵营</th><th>标的</th>
+      <th>股东</th><th>动作</th><th class="r">持仓市值</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan=6 class="empty">无数据</td></tr>'}</tbody></table></div>
+    </div>
+  </section>`;
+}
+
+// ---------------------------------------------------------------- 资产行情
+function renderAssets(a){
+  if(!a || !a.groups || !a.groups.length) return '';
+  const cards = a.groups.map(g=>{
+    const items = g.items.map(it=>`
+      <div class="asset-row">
+        <span class="an">${esc(it.name)}</span>
+        <span class="av mono">${it.value>=1000?fmt(it.value,2):it.value.toFixed(2)}<span class="au">${esc(it.unit)}</span></span>
+        <span class="ac mono ${it.chg>0?'pos':'negv'}">${(it.chg||0)>=0?'+':''}${(it.chg||0).toFixed(2)}%</span>
+      </div>`).join('');
+    return `<div class="card" style="padding:0;overflow:hidden">
+      <div class="tbl-hd">${esc(g.group)}<span>${g.items.length}</span></div>
+      <div style="padding:6px 16px 12px">${items}</div></div>`;
+  }).join('');
+  return `
+  <section>
+    <div class="sec-hd"><h2>资产行情</h2><span class="tag">Assets</span>
+      <span class="note">${esc(a.date||"")} · 东方财富行情</span></div>
+    <div class="grid g3">${cards}</div>
+  </section>`;
+}
+
+// ---------------------------------------------------------------- 区域房价（官方指数）
+function renderRegion(rg){
+  if(!rg || !rg.cities || !rg.cities.length) return '';
+  const cs = rg.cities;
+  const up = cs.filter(c=>(c.snd_yoy||0)>100).length;
+  const down = cs.filter(c=>(c.snd_yoy||0)<100).length;
+  const rows = cs.map(c=>{
+    const y = c.snd_yoy||0, m = c.snd_mom||0;
+    return `<tr>
+      <td class="nowrap">${esc(c.city)}</td>
+      <td class="r mono ${y>100?'pos':'negv'}">${fmt(y,1)}</td>
+      <td class="r mono ${m>100?'pos':'negv'}">${fmt(m,1)}</td>
+      <td class="r mono">${fmt(c.new_yoy,1)}</td>
+    </tr>`;
+  }).join('');
+  return `
+  <section>
+    <div class="sec-hd"><h2>区域房价指数</h2><span class="tag">Regional</span>
+      <span class="note">${esc(rg.month||"")} · 国家统计局 70 城 · 上年同月=100</span></div>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="card kpi"><div class="k">二手房同比上涨</div>
+        <div class="v num pos">${up}<span class="u">城</span></div>
+        <div class="d">共 ${cs.length} 城</div></div>
+      <div class="card kpi"><div class="k">二手房同比下跌</div>
+        <div class="v num negv">${down}<span class="u">城</span></div>
+        <div class="d">跌幅最大 ${esc(cs[0]?.city||"")} ${fmt(cs[0]?.snd_yoy,1)}</div></div>
+      <div class="card kpi"><div class="k">最强城市</div>
+        <div class="v num" style="font-size:20px">${esc(cs[cs.length-1]?.city||"")}</div>
+        <div class="d">二手同比 ${fmt(cs[cs.length-1]?.snd_yoy,1)}</div></div>
+      <div class="card kpi"><div class="k">最弱城市</div>
+        <div class="v num" style="font-size:20px">${esc(cs[0]?.city||"")}</div>
+        <div class="d">二手同比 ${fmt(cs[0]?.snd_yoy,1)}</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tbl-hd">70 城二手房同比（升序）<span>${cs.length} 城</span></div>
+      <div class="scroll"><table class="fixed3"><thead><tr><th>城市</th>
+      <th class="r">二手同比</th><th class="r">二手环比</th><th class="r">新房同比</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    </div>
+  </section>`;
+}
+
+// ---------------------------------------------------------------- 主流程
+async function load(){
+  const app = $("#app");
+  try{
+    const [s, sb, g, h, t, a, as, rg] = await Promise.all([
+      j("/api/summary"), j("/api/smartbuy"), j("/api/gold"), j("/api/holdings"),
+      j("/api/trades"), j("/api/announcements"), j("/api/assets"), j("/api/region")
+    ]);
+    $("#asOf").textContent = s.as_of;
+    app.innerHTML = renderSummary(s)
+      + renderSmartBuy(sb)
+      + renderGold(g)
+      + renderAssets(as)
+      + renderHoldings(h)
+      + renderTrades(t)
+      + renderRegion(rg)
+      + renderAnn(a)
+      + renderHealth(s);
+
+    lineChart($("#chGold"), g.series, {key:"oz", color:"#d9b25f"});
+    barChart($("#chDelta"), g.series.filter(x=>x.delta!=null), {
+      key:"delta",
+      labelFn: d=>d.month+" 增量",
+      colorFn: d=> d.delta>0 ? "#d9b25f" : "#4ecdc4"
+    });
+  }catch(e){
+    app.innerHTML = `<div class="err">加载失败：${esc(e.message)}<br>
+      确认后端已启动：<code>python -m smartmoney.web</code></div>`;
+  }
+}
+
+$("#btnReload").onclick = load;
+$("#btnRefresh").onclick = async () => {
+  const b = $("#btnRefresh");
+  b.disabled = true; b.textContent = "采集中…";
+  try{
+    const r = await j("/api/collect", {method:"POST"});
+    const fails = Object.entries(r.stats||{}).filter(([k,v])=>typeof v==="string" && v.startsWith("FAIL"));
+    if(fails.length) alert("部分源失败：\n"+fails.map(([k,v])=>k+": "+v).join("\n"));
+    await load();
+  }catch(e){
+    alert("采集失败："+e.message);
+  }finally{
+    b.disabled = false; b.textContent = "重新采集";
+  }
+};
+
+let rt;
+window.addEventListener("resize", ()=>{ clearTimeout(rt); rt=setTimeout(load, 400); });
+load();
+</script>
+</body>
+</html>
